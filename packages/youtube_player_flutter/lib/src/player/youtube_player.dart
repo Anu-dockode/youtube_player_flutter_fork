@@ -218,7 +218,7 @@ class _YoutubePlayerState extends State<YoutubePlayer> {
       _initialLoad = false;
       // from this
       if (_initialLoad2) {
-        await Future.delayed(const Duration(milliseconds: 4500));
+        await Future.delayed(const Duration(milliseconds: 4800));
         _initialLoad2 = false;
       }
       //---> to this - added additionally by Anupama
