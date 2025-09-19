@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 import 'package:flutter/material.dart';
+import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
 import '../enums/thumbnail_quality.dart';
 import '../utils/errors.dart';
@@ -57,8 +58,12 @@ class YoutubePlayer extends StatefulWidget {
     this.actionsPadding = const EdgeInsets.all(8.0),
     this.thumbnail,
     this.showVideoProgressIndicator = false,
+    this.hideYoutubeIcon = true, //---> added additionally by Anupama
   })  : progressColors = progressColors ?? const ProgressBarColors(),
         progressIndicatorColor = progressIndicatorColor ?? Colors.red;
+
+  /// costum
+  final bool hideYoutubeIcon; // ---> added additionally by Anupama
 
   /// A [YoutubePlayerController] to control the player.
   final YoutubePlayerController controller;
@@ -192,6 +197,7 @@ class _YoutubePlayerState extends State<YoutubePlayer> {
 
   late double _aspectRatio;
   bool _initialLoad = true;
+  bool _initialLoad2 = true; //---> added additionally by Anupama
 
   @override
   void initState() {
@@ -210,6 +216,12 @@ class _YoutubePlayerState extends State<YoutubePlayer> {
   void listener() async {
     if (controller.value.isReady && _initialLoad) {
       _initialLoad = false;
+      // from this
+      if (_initialLoad2) {
+        await Future.delayed(const Duration(milliseconds: 4500));
+        _initialLoad2 = false;
+      }
+      //---> to this - added additionally by Anupama
       if (controller.flags.autoPlay) controller.play();
       if (controller.flags.mute) controller.mute();
       widget.onReady?.call();
@@ -307,6 +319,27 @@ class _YoutubePlayerState extends State<YoutubePlayer> {
               widget.onEnded?.call(metaData);
             },
           ),
+          //--> from this
+          if ((!controller.flags.hideControls) &&
+                  (controller.value.playerState == PlayerState.cued ||
+                      controller.value.playerState == PlayerState.unStarted ||
+                      controller.value.playerState == PlayerState.buffering ||
+                      !controller.value.isPlaying ||
+                      controller.value.isControlsVisible) ||
+              _initialLoad2)
+            Visibility(
+              visible: widget.hideYoutubeIcon,
+              child: Positioned(
+                bottom: 0,
+                left: -7.0,
+                right: -7.0,
+                child: Container(height: 55, color: Colors.black),
+              ),
+            ),
+
+          //need to configure the above container
+          //to this ---> added additionally by Anupama
+
           if (!controller.flags.hideThumbnail)
             AnimatedOpacity(
               opacity: controller.value.isPlaying ? 0 : 1,
@@ -337,44 +370,55 @@ class _YoutubePlayerState extends State<YoutubePlayer> {
               disableDragSeek: controller.flags.disableDragSeek,
               timeOut: widget.controlsTimeOut,
             ),
-            Positioned(
-              bottom: 0,
-              left: 0,
-              right: 0,
-              child: AnimatedOpacity(
-                opacity: !controller.flags.hideControls &&
-                        controller.value.isControlsVisible
-                    ? 1
-                    : 0,
-                duration: const Duration(milliseconds: 300),
-                child: controller.flags.isLive
-                    ? LiveBottomBar(
-                        liveUIColor: widget.liveUIColor,
-                        showLiveFullscreenButton:
-                            widget.controller.flags.showLiveFullscreenButton,
-                      )
-                    : Padding(
-                        padding: widget.bottomActions == null
-                            ? const EdgeInsets.all(0.0)
-                            : widget.actionsPadding,
-                        child: Row(
-                          children: widget.bottomActions ??
-                              [
-                                const SizedBox(width: 14.0),
-                                const CurrentPosition(),
-                                const SizedBox(width: 8.0),
-                                ProgressBar(
-                                  isExpanded: true,
-                                  colors: widget.progressColors,
-                                ),
-                                const RemainingDuration(),
-                                const PlaybackSpeedButton(),
-                                const FullScreenButton(),
-                              ],
+            //--> from this
+            if ((!controller.flags.hideControls) &&
+                    (controller.value.isPlaying &&
+                        controller.value.isControlsVisible) ||
+                controller.value.playerState == PlayerState.paused ||
+                (controller.value.isPlaying && _initialLoad2))
+              //--> to this ---> added additionally by Anupama
+              Positioned(
+                bottom: 0,
+                left: 0,
+                right: 0,
+                child: AnimatedOpacity(
+                  // opacity: !controller.flags.hideControls &&
+                  //         controller.value.isControlsVisible
+                  //     ? 1
+                  //     : 0,
+                  // ---> commented the above by Anupama
+                  opacity: 1,
+                  duration: const Duration(
+                    milliseconds: 0,
+                  ), //---> removed 300 value by Anupama
+                  child: controller.flags.isLive
+                      ? LiveBottomBar(
+                          liveUIColor: widget.liveUIColor,
+                          showLiveFullscreenButton:
+                              widget.controller.flags.showLiveFullscreenButton,
+                        )
+                      : Padding(
+                          padding: widget.bottomActions == null
+                              ? const EdgeInsets.all(0.0)
+                              : widget.actionsPadding,
+                          child: Row(
+                            children: widget.bottomActions ??
+                                [
+                                  const SizedBox(width: 14.0),
+                                  const CurrentPosition(),
+                                  const SizedBox(width: 8.0),
+                                  ProgressBar(
+                                    isExpanded: true,
+                                    colors: widget.progressColors,
+                                  ),
+                                  const RemainingDuration(),
+                                  const PlaybackSpeedButton(),
+                                  const FullScreenButton(),
+                                ],
+                          ),
                         ),
-                      ),
+                ),
               ),
-            ),
             Positioned(
               top: 0,
               left: 0,
@@ -394,8 +438,12 @@ class _YoutubePlayerState extends State<YoutubePlayer> {
               ),
             ),
           ],
-          if (!controller.flags.hideControls)
-            const Center(child: PlayPauseButton()),
+          // from this ------*
+          // if (!controller.flags.hideControls)
+          //   Center(
+          //     child: PlayPauseButton(),
+          //   ),
+          // to this ----> commented by Anupama
           if (controller.value.hasError) errorWidget,
         ],
       ),
