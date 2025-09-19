@@ -320,12 +320,9 @@ class _YoutubePlayerState extends State<YoutubePlayer> {
             },
           ),
           //--> from this
-          if ((!controller.flags.hideControls) &&
-                  (controller.value.playerState == PlayerState.cued ||
-                      controller.value.playerState == PlayerState.unStarted ||
-                      controller.value.playerState == PlayerState.buffering ||
-                      !controller.value.isPlaying ||
-                      controller.value.isControlsVisible) ||
+          if ((controller.value.playerState == PlayerState.cued ||
+                  controller.value.playerState == PlayerState.unStarted ||
+                  controller.value.playerState == PlayerState.buffering) ||
               _initialLoad2)
             Visibility(
               visible: widget.hideYoutubeIcon,
@@ -439,10 +436,10 @@ class _YoutubePlayerState extends State<YoutubePlayer> {
             ),
           ],
           // from this ------*
-          // if (!controller.flags.hideControls)
-          //   Center(
-          //     child: PlayPauseButton(),
-          //   ),
+          if (!controller.flags.hideControls)
+            Center(
+              child: PlayPauseButton(),
+            ),
           // to this ----> commented by Anupama
           if (controller.value.hasError) errorWidget,
         ],
